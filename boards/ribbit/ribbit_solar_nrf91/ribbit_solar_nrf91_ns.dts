@@ -1,0 +1,40 @@
+/dts-v1/;
+#include <nordic/nrf9151ns_laca.dtsi>
+#include "ribbit_solar_nrf91-pinctrl.dtsi"
+#include "ribbit_solar_nrf91-partitioning.dtsi"
+
+/ {
+	chosen {
+		zephyr,flash = &flash0;
+		zephyr,sram = &sram0_ns;
+		zephyr,code-partition = &slot0_ns_partition;
+	};
+
+	aliases {
+		led0 = &yellowled;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+		yellowled: led_0 {
+				gpios = <&gpio0 7 GPIO_ACTIVE_LOW>;
+		};
+	};
+};
+
+&gpiote {
+	status = "okay";
+};
+
+&gpio0 {
+	status = "okay";
+};
+
+&uart0 {
+	compatible = "nordic,nrf-uarte";
+	status = "okay";
+	current-speed = <115200>;
+	pinctrl-0 = <&uart0_default>;
+	pinctrl-1 = <&uart0_sleep>;
+	pinctrl-names = "default", "sleep";
+};

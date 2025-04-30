@@ -1,0 +1,7 @@
+board:
+  name: ribbit_solar_nrf91
+  vendor: ribbit
+  socs:
+  - name: nrf9151
+    variants:
+    - name: ns

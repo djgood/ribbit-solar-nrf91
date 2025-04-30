@@ -1,0 +1,14 @@
+/dts-v1/;
+#include <nordic/nrf9151_laca.dtsi>
+#include "ribbit_solar_nrf91-pinctrl.dtsi"
+#include "ribbit_solar_nrf91-partitioning.dtsi"
+
+/ {
+	chosen {
+		zephyr,sram = &sram0_s;
+		zephyr,flash = &flash0;
+		zephyr,code-partition = &slot0_partition;
+		zephyr,sram-secure-partition = &sram0_s;
+		zephyr,sram-non-secure-partition = &sram0_ns;
+	};
+};
