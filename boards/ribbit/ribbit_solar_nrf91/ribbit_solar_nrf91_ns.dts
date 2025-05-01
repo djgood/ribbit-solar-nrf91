@@ -39,3 +39,16 @@
 	pinctrl-1 = <&uart0_sleep>;
 	pinctrl-names = "default", "sleep";
 };
+
+&i2c0 {
+	compatible = "nordic,nrf-twim";
+	status = "okay";
+	pinctrl-0 = <&i2c0-default>;
+	pinctrl-names = "default";
+
+	bq25798: bq25798@6b {
+		compatible = "i2c-device";
+		reg = < 0x6b >;
+		label = "PMIC";
+	};
+};
