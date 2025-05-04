@@ -244,7 +244,7 @@ int program_charge_params(void)
 
     // bq.config_vsysmin(2500)
 	// 0 * 250 mV + 2500 mV == 2500 mV
-	if (i2c_reg_write_byte_dt(&pmic_i2c, REG_Minimum_System_Voltage, 1)) {
+	if (i2c_reg_write_byte_dt(&pmic_i2c, REG_Minimum_System_Voltage, 0)) {
 		goto failed;
 	}
 
@@ -255,8 +255,8 @@ int program_charge_params(void)
 	printk("Minimum System Voltage = %d mV\n", (byte_val * 250) + 2500);
 
 	uint16_t word_val;
-    // bq.config_charge_voltage_limit(3500)
-	if (i2c_reg_write_word_dt(&pmic_i2c, REG_Charge_Voltage_Limit, 350)) {
+    // bq.config_charge_voltage_limit(3550)
+	if (i2c_reg_write_word_dt(&pmic_i2c, REG_Charge_Voltage_Limit, 355)) {
 		goto failed;
 	}
 	
