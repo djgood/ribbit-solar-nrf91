@@ -314,12 +314,12 @@ int program_charge_params(void)
 
 	// printk("Forcing re-check\n");
 
-	// In theory, this should could be turned on whenever we detect the solar power present
+	// In theory, MPPT could be turned on whenever we detect the solar power present
 
 	// bq.enable_mppt()
-	// if (i2c_reg_write_byte_dt(&pmic_i2c, REG_MPPT_Control, 0x4B)) {
-	// 	goto failed;
-	// }
+	if (i2c_reg_write_byte_dt(&pmic_i2c, REG_MPPT_Control, 0x4B)) {
+		goto failed;
+	}
 
 	// printk("Enabled MPPT\n");
 
@@ -364,6 +364,25 @@ failed:
 	return 1;
 }
 
+int print_adc_values(void)
+{
+	// Read conversions
+	char * names[9] = {"ibus", "ibat", "vbus", "vac1", "vac2", "vbat", "vsys", "ts", "tdie"};
+	int16_t vals[9] = {0};
+	for (uint8_t i = 0; i < 9; i++) {
+		if (i2c_reg_read_word_dt(&pmic_i2c, 0x31 + (2*i), vals + i)) {
+			return -1;
+		}
+	}
+
+	for (int i = 0; i < 9; i++) {
+		printk("%s : %d\n", names[i], vals[i]);
+	}
+
+	return 0;
+}
+
+
 int main(void)
 {
 	if (turn_on_sbus()) {
@@ -378,6 +397,24 @@ int main(void)
 
 	enable_charging();
 
-	infinite_blink(); // should not return
+	// Enable ADC
+	if (i2c_reg_write_byte_dt(&pmic_i2c, REG_ADC_Control, 0x80)) {
+		printk("ERROR DURING ADC ENABLE\n");
+		return -1;
+	}
+
+	// Ensure we're charging from panel
+	if (i2c_reg_write_byte_dt(&pmic_i2c, 0x13, 0x80)) {
+		printk("ERROR DURING ADC ENABLE\n");
+		return -1;
+	}
+
+	printk("Enabled ADC continuous conversion\n");
+
+	while (true) {
+		print_adc_values();
+		k_sleep(K_MSEC(1000));
+	}
+
 	return 0;
 }
