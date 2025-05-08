@@ -1,0 +1,10 @@
+identifier: ribbit_solar_nrf91/nrf9151/ns
+name: LTE Chip
+vendor: ribbit
+type: mcu
+arch: arm
+ram: 128
+flash: 212
+toolchain:
+  - zephyr
+supported: []

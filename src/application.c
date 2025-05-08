@@ -29,7 +29,10 @@
 #include "at_commands.h"
 #include "shadow_config.h"
 
+
 LOG_MODULE_REGISTER(application, CONFIG_MULTI_SERVICE_LOG_LEVEL);
+
+#include "ribbit.h"
 
 /* Timer used to time the sensor sampling rate. */
 static K_TIMER_DEFINE(sensor_sample_timer, NULL, NULL);
@@ -323,15 +326,15 @@ static void test_counter_send(void)
 	}
 }
 
-static void button_handler(uint32_t button_state, uint32_t has_changed)
-{
-	if (has_changed & DK_BTN1_MSK) {
-		if ((button_state & DK_BTN1_MSK) == DK_BTN1_MSK) {
-			LOG_INF("Button pressed");
-			(void)nrf_cloud_alert_send(ALERT_TYPE_MSG, 0, "Button pressed");
-		}
-	}
-}
+// static void button_handler(uint32_t button_state, uint32_t has_changed)
+// {
+// 	if (has_changed & DK_BTN1_MSK) {
+// 		if ((button_state & DK_BTN1_MSK) == DK_BTN1_MSK) {
+// 			LOG_INF("Button pressed");
+// 			(void)nrf_cloud_alert_send(ALERT_TYPE_MSG, 0, "Button pressed");
+// 		}
+// 	}
+// }
 
 static void print_reset_reason(void)
 {
@@ -363,10 +366,13 @@ void main_application_thread_fn(void)
 		register_general_dev_msg_handler(handle_at_cmd_requests);
 	}
 
-	dk_buttons_init(button_handler);
+	// dk_buttons_init(button_handler);
 
 	/* Wait for first connection before starting the application. */
 	(void)await_cloud_ready(K_FOREVER);
+
+	LOG_INF("AT%%XANTCFG=1 : %s", execute_at_cmd_request("AT%XANTCFG=1"));
+	LOG_INF("AT%%XCOEX2=2  : %s", execute_at_cmd_request("AT%XCOEX2=2"));
 
 	report_startup();
 
@@ -401,6 +407,14 @@ void main_application_thread_fn(void)
 					CONFIG_LOCATION_TRACKING_SAMPLE_INTERVAL_SECONDS);
 #endif
 
+	/* Ribbit Init */
+	program_charge_params();
+	enable_charging();
+	turn_on_sbus();
+
+	k_sleep(K_MSEC(1000));
+	set_co2_low_sample_rate();
+
 	/* Begin sampling sensors. */
 	while (true) {
 		/* Start the sensor sample interval timer.
@@ -413,14 +427,32 @@ void main_application_thread_fn(void)
 			K_SECONDS(CONFIG_SENSOR_SAMPLE_INTERVAL_SECONDS), K_FOREVER);
 
 		if (IS_ENABLED(CONFIG_TEMP_TRACKING)) {
-			double temp = -1;
 
-			if (get_temperature(&temp) == 0) {
-				LOG_INF("Temperature is %d degrees C", (int)temp);
-				(void)send_sensor_sample(NRF_CLOUD_JSON_APPID_VAL_TEMP, temp);
-
-				monitor_temperature(temp);
+			float temp;
+			if (read_co2(&temp) == 0) {
+				LOG_INF("CO2=%f", (double)temp);
+				// LOG_INF("Temperature is %d degrees C", (int)temp);
+				(void)send_sensor_sample(NRF_CLOUD_JSON_APPID_VAL_TEMP, (double)temp);
+			} else {
+				LOG_INF("Reading SCD30 failed");
 			}
+
+			uint16_t ibus;
+			if (read_ibus(&ibus) == 0) {
+				LOG_INF("IBUS=%d", ibus);
+				(void)send_sensor_sample(NRF_CLOUD_JSON_APPID_VAL_HUMID, (double)ibus);
+			} else {
+				LOG_ERR("Reading VBUS->PMID current failed");
+			}
+
+			uint16_t ibat;
+			if (read_ibat(&ibat) == 0) {
+				LOG_INF("IBAT=%d", ibat);
+				(void)send_sensor_sample(NRF_CLOUD_JSON_APPID_VAL_AIR_PRESS, (double)ibat);
+			} else {
+				LOG_ERR("Reading VBAT current failed");
+			}
+
 		}
 
 		if (test_counter_enable_get()) {
