@@ -357,6 +357,8 @@ static void report_startup(void)
 
 void main_application_thread_fn(void)
 {
+	program_charge_params();
+
 	print_reset_reason();
 
 	if (IS_ENABLED(CONFIG_AT_CMD_REQUESTS)) {
@@ -408,11 +410,9 @@ void main_application_thread_fn(void)
 #endif
 
 	/* Ribbit Init */
-	program_charge_params();
+	// program_charge_params();
 	enable_charging();
 	turn_on_sbus();
-
-	k_sleep(K_MSEC(1000));
 	set_co2_low_sample_rate();
 
 	/* Begin sampling sensors. */
