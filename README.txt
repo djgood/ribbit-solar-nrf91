@@ -1,3 +1,1 @@
-This sample extends the same-named Zephyr sample to verify it with Nordic development kits.
-
-Source code and basic configuration files can be found in the corresponding folder structure in zephyr/samples/basic/blinky.
+Small piece of code for testing nRF9151-based board for my Ribbit Power Hop Challenge contest entry
